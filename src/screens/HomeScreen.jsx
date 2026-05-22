@@ -1,33 +1,17 @@
-import { useState } from 'react'
 import Layout from '../components/Layout.jsx'
 import TransitCard from '../components/TransitCard.jsx'
 import Spinner from '../components/Spinner.jsx'
 import { filterByExactName, getSuggestedNames } from '../lib/flights.js'
 
-export default function HomeScreen({ flights, loading, error, reload, progress, nickname, onNicknameChange, onSelectFlight, themeProps }) {
-  const [selectedName, setSelectedName] = useState(null)
-
+export default function HomeScreen({
+  flights, loading, error, reload, progress,
+  nickname, selectedName,
+  onNicknameChange, onSelectName, onClearName,
+  onSelectFlight, onToggleDone,
+  themeProps,
+}) {
   const suggestions = selectedName ? [] : getSuggestedNames(flights, nickname)
-  const filtered = selectedName
-    ? filterByExactName(flights, selectedName)
-    : []
-
-  function handleInputChange(value) {
-    setSelectedName(null)
-    onNicknameChange(value)
-  }
-
-  function handleSelectName(name) {
-    setSelectedName(name)
-    onNicknameChange(name)
-  }
-
-  function handleClear() {
-    setSelectedName(null)
-    onNicknameChange('')
-  }
-
-  const showResults = !loading && !error && selectedName
+  const filtered = selectedName ? filterByExactName(flights, selectedName) : []
 
   return (
     <Layout {...themeProps}>
@@ -53,7 +37,7 @@ export default function HomeScreen({ flights, loading, error, reload, progress, 
         <input
           type="text"
           value={nickname}
-          onChange={e => handleInputChange(e.target.value)}
+          onChange={e => onNicknameChange(e.target.value)}
           placeholder="e.g. John, Somchai…"
           className="input-base text-base"
           autoComplete="off"
@@ -67,7 +51,7 @@ export default function HomeScreen({ flights, loading, error, reload, progress, 
               <button
                 key={name}
                 type="button"
-                onClick={() => handleSelectName(name)}
+                onClick={() => onSelectName(name)}
                 className="text-sm px-3 py-1 rounded-full bg-beige dark:bg-stone-700 text-warm-gray-dark dark:text-stone-200 border border-warm-gray-light/40 dark:border-stone-600 hover:bg-accent/20 hover:text-accent hover:border-accent/40 transition-colors"
               >
                 {name}
@@ -84,7 +68,7 @@ export default function HomeScreen({ flights, loading, error, reload, progress, 
             </span>
             <button
               type="button"
-              onClick={handleClear}
+              onClick={onClearName}
               className="text-xs text-warm-gray dark:text-stone-400 hover:text-danger transition-colors px-1"
               aria-label="Clear selection"
             >
@@ -114,7 +98,7 @@ export default function HomeScreen({ flights, loading, error, reload, progress, 
         </div>
       )}
 
-      {showResults && (
+      {!loading && !error && selectedName && (
         <div>
           <p className="text-xs font-semibold text-warm-gray dark:text-stone-400 uppercase tracking-wider mb-3">
             {filtered.length > 0
@@ -139,6 +123,7 @@ export default function HomeScreen({ flights, loading, error, reload, progress, 
                 flight={flight}
                 status={progress[flight.id]}
                 onClick={() => onSelectFlight(flight)}
+                onToggleDone={() => onToggleDone(flight.id)}
               />
             ))}
           </div>

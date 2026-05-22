@@ -21,23 +21,20 @@ function Cell({ label, value }) {
   )
 }
 
-export default function TransitCard({ flight, status, onClick }) {
+export default function TransitCard({ flight, status, onClick, onToggleDone }) {
   const reportType = computeReportType(flight)
   const cfg = TYPE_CONFIG[reportType]
   const isDone = status === 'done'
 
   return (
-    <button
-      type="button"
-      onClick={!isDone ? onClick : undefined}
-      className={`w-full text-left rounded-2xl overflow-hidden border transition-all active:scale-[0.98]
-        bg-white dark:bg-stone-800
-        border-beige dark:border-stone-700
-        shadow-cozy
-        ${isDone ? 'opacity-55 cursor-default' : 'hover:shadow-cozy-md cursor-pointer'}`}
+    <div
+      className={`w-full rounded-2xl overflow-hidden border transition-all
+        ${isDone
+          ? 'bg-white dark:bg-stone-800 border-accent/30 dark:border-accent/20'
+          : 'bg-white dark:bg-stone-800 border-beige dark:border-stone-700 shadow-cozy'}`}
     >
       {/* Accent top bar */}
-      <div className={`h-1 w-full ${cfg.accent}`} />
+      <div className={`h-1 w-full ${isDone ? 'bg-accent/40' : cfg.accent}`} />
 
       <div className="p-4 space-y-3">
         {/* Header row */}
@@ -59,7 +56,7 @@ export default function TransitCard({ flight, status, onClick }) {
             {status && STATUS_LABEL[status] && (
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                 status === 'done'
-                  ? 'bg-accent-light/40 text-accent-dark dark:bg-accent/20 dark:text-accent-light'
+                  ? 'bg-accent/20 text-accent dark:bg-accent/20 dark:text-accent-light'
                   : 'bg-blue-light text-blue-soft dark:bg-blue-soft/20 dark:text-blue-light'
               }`}>
                 {STATUS_LABEL[status]}
@@ -68,10 +65,9 @@ export default function TransitCard({ flight, status, onClick }) {
           </div>
         </div>
 
-        {/* Shared 4-column grid — aligns FLT↔FLT, ARR↔DEP, STA↔STD, BAY only in arrival */}
+        {/* Shared 4-column grid */}
         <div className="bg-beige/50 dark:bg-stone-700/40 rounded-xl px-3 py-2.5">
           <div className="grid grid-cols-4 gap-x-2 gap-y-3">
-            {/* Arrival section label */}
             <div className="col-span-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-warm-gray dark:text-stone-500">✈ Arrival</p>
             </div>
@@ -80,21 +76,18 @@ export default function TransitCard({ flight, status, onClick }) {
             <Cell label="STA" value={flight.sta} />
             <Cell label="BAY" value={flight.bay} />
 
-            {/* Divider */}
             <div className="col-span-4 border-t border-beige dark:border-stone-600" />
 
-            {/* Departure section label */}
             <div className="col-span-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-warm-gray dark:text-stone-500">✈ Departure</p>
             </div>
             <Cell label="FLT" value={flight.fltDep} />
             <Cell label="DEP" value={flight.dep} />
             <Cell label="STD" value={flight.std} />
-            <div />{/* empty 4th col to keep grid uniform */}
+            <div />
           </div>
         </div>
 
-        {/* Mech */}
         {flight.mechTech && (
           <div className="flex items-center gap-1.5 pt-0.5">
             <span className="text-[10px] text-warm-gray dark:text-stone-500 uppercase tracking-wider">Crew</span>
@@ -103,12 +96,34 @@ export default function TransitCard({ flight, status, onClick }) {
         )}
       </div>
 
-      {/* Footer tap hint */}
-      {!isDone && (
-        <div className="px-4 pb-3 flex justify-end">
-          <span className="text-xs text-warm-gray-light dark:text-stone-600">Tap to start report →</span>
-        </div>
-      )}
-    </button>
+      {/* Footer: tap hint + done toggle */}
+      <div className="px-4 pb-3 flex items-center justify-between gap-2">
+        {!isDone ? (
+          <button
+            type="button"
+            onClick={onClick}
+            className="text-xs text-warm-gray-light dark:text-stone-600 hover:text-accent transition-colors active:scale-95"
+          >
+            Tap to start report →
+          </button>
+        ) : (
+          <span className="text-xs text-accent/60 dark:text-accent/50">Report submitted</span>
+        )}
+
+        {onToggleDone && (
+          <button
+            type="button"
+            onClick={onToggleDone}
+            aria-label={isDone ? 'Mark undone' : 'Mark done'}
+            className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all flex-shrink-0 text-xs font-bold
+              ${isDone
+                ? 'border-accent bg-accent text-white'
+                : 'border-warm-gray-light dark:border-stone-600 text-transparent hover:border-accent hover:text-accent/50'}`}
+          >
+            ✓
+          </button>
+        )}
+      </div>
+    </div>
   )
 }

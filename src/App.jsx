@@ -9,7 +9,7 @@ export default function App() {
   const { state, dispatch } = useAppReducer()
   const { flights, loading, error, reload } = useFlights()
   const { dark, toggle } = useTheme()
-  const { screen, nickname, selectedFlight, progress } = state
+  const { screen, nickname, selectedName, selectedFlight, progress } = state
 
   const themeProps = { onThemeToggle: toggle, dark }
 
@@ -22,8 +22,12 @@ export default function App() {
         reload={reload}
         progress={progress}
         nickname={nickname}
+        selectedName={selectedName}
         onNicknameChange={v => dispatch({ type: 'SET_NICKNAME', payload: v })}
+        onSelectName={name => dispatch({ type: 'SET_SELECTED_NAME', payload: name })}
+        onClearName={() => dispatch({ type: 'CLEAR_NAME' })}
         onSelectFlight={flight => dispatch({ type: 'SELECT_FLIGHT', payload: flight })}
+        onToggleDone={flightId => dispatch({ type: 'TOGGLE_DONE', payload: { flightId } })}
         themeProps={themeProps}
       />
     )
