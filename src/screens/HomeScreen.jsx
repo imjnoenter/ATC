@@ -1,10 +1,33 @@
+import { useState } from 'react'
 import Layout from '../components/Layout.jsx'
 import TransitCard from '../components/TransitCard.jsx'
 import Spinner from '../components/Spinner.jsx'
-import { filterByNickname } from '../lib/flights.js'
+import { filterByExactName, getSuggestedNames } from '../lib/flights.js'
 
 export default function HomeScreen({ flights, loading, error, reload, progress, nickname, onNicknameChange, onSelectFlight, themeProps }) {
-  const filtered = filterByNickname(flights, nickname)
+  const [selectedName, setSelectedName] = useState(null)
+
+  const suggestions = selectedName ? [] : getSuggestedNames(flights, nickname)
+  const filtered = selectedName
+    ? filterByExactName(flights, selectedName)
+    : []
+
+  function handleInputChange(value) {
+    setSelectedName(null)
+    onNicknameChange(value)
+  }
+
+  function handleSelectName(name) {
+    setSelectedName(name)
+    onNicknameChange(name)
+  }
+
+  function handleClear() {
+    setSelectedName(null)
+    onNicknameChange('')
+  }
+
+  const showResults = !loading && !error && selectedName
 
   return (
     <Layout {...themeProps}>
@@ -30,12 +53,45 @@ export default function HomeScreen({ flights, loading, error, reload, progress, 
         <input
           type="text"
           value={nickname}
-          onChange={e => onNicknameChange(e.target.value)}
+          onChange={e => handleInputChange(e.target.value)}
           placeholder="e.g. John, Somchai…"
           className="input-base text-base"
           autoComplete="off"
           autoCapitalize="none"
         />
+
+        {/* Suggestion chips — shown while typing before a name is selected */}
+        {!selectedName && suggestions.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {suggestions.map(name => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => handleSelectName(name)}
+                className="text-sm px-3 py-1 rounded-full bg-beige dark:bg-stone-700 text-warm-gray-dark dark:text-stone-200 border border-warm-gray-light/40 dark:border-stone-600 hover:bg-accent/20 hover:text-accent hover:border-accent/40 transition-colors"
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Selected name chip */}
+        {selectedName && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-sm px-3 py-1.5 rounded-full bg-accent/15 text-accent border border-accent/50 font-semibold">
+              {selectedName}
+            </span>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="text-xs text-warm-gray dark:text-stone-400 hover:text-danger transition-colors px-1"
+              aria-label="Clear selection"
+            >
+              ✕
+            </button>
+          </div>
+        )}
       </div>
 
       {loading && (
@@ -58,7 +114,7 @@ export default function HomeScreen({ flights, loading, error, reload, progress, 
         </div>
       )}
 
-      {!loading && !error && nickname.trim() && (
+      {showResults && (
         <div>
           <p className="text-xs font-semibold text-warm-gray dark:text-stone-400 uppercase tracking-wider mb-3">
             {filtered.length > 0
@@ -69,7 +125,7 @@ export default function HomeScreen({ flights, loading, error, reload, progress, 
             <div className="card p-6 text-center">
               <div className="text-3xl mb-2">✈️</div>
               <p className="text-warm-gray dark:text-stone-400 text-sm">
-                No flights found for <strong>"{nickname}"</strong>
+                No flights found for <strong>"{selectedName}"</strong>
               </p>
               <p className="text-xs text-warm-gray-light dark:text-stone-500 mt-1">
                 Check your nickname or try a shorter search.
@@ -89,7 +145,7 @@ export default function HomeScreen({ flights, loading, error, reload, progress, 
         </div>
       )}
 
-      {!loading && !error && !nickname.trim() && (
+      {!loading && !error && !selectedName && !nickname.trim() && (
         <div className="card p-6 text-center mt-4">
           <div className="text-4xl mb-3">🛬</div>
           <p className="text-warm-gray dark:text-stone-400 text-sm">Enter your nickname above to see today's transits.</p>
