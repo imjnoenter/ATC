@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#7A9E7E"/>
+
+  <!-- Fuselage -->
+  <path d="M256,62 C272,90 280,130 280,168 L280,372 Q280,432 256,444 Q232,432 232,372 L232,168 C232,130 240,90 256,62 Z" fill="white"/>
+
+  <!-- Right wing -->
+  <path d="M280,200 L445,312 L430,345 L280,268 Z" fill="white"/>
+
+  <!-- Left wing -->
+  <path d="M232,200 L67,312 L82,345 L232,268 Z" fill="white"/>
+
+  <!-- Right stabilizer -->
+  <path d="M277,354 L362,398 L347,420 L277,378 Z" fill="white"/>
+
+  <!-- Left stabilizer -->
+  <path d="M235,354 L150,398 L165,420 L235,378 Z" fill="white"/>
+</svg>
