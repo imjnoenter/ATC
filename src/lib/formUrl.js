@@ -17,15 +17,18 @@ export function buildPrefillUrl(flight) {
   params.set('usp', 'pp_url')
 
   // Page 2: Report type only — RE-FUEL user handles themselves
-  const reportTypeValue =
-    reportType === 'PREDEP'    ? OPTIONS.reportType.predep
-    : reportType === 'ARRIVAL' ? OPTIONS.reportType.arrival
+  // FIRST_FLIGHT uses same form option + flight data as PREDEP
+  // NIGHTSTOP uses same form option + flight data as ARRIVAL
+  const isPredepLike  = reportType === 'PREDEP'   || reportType === 'FIRST_FLIGHT'
+  const isArrivalLike = reportType === 'ARRIVAL'  || reportType === 'NIGHTSTOP'
+  const reportTypeValue = isPredepLike ? OPTIONS.reportType.predep
+    : isArrivalLike ? OPTIONS.reportType.arrival
     : OPTIONS.reportType.transit
   params.set(ENTRY.reportType, reportTypeValue)
 
   // Page 4: Flight details
-  const rawFlight  = reportType === 'PREDEP' ? flight.fltDep : flight.flt
-  const rawAirport = reportType === 'PREDEP' ? flight.dep    : flight.arr
+  const rawFlight  = isPredepLike ? flight.fltDep : flight.flt
+  const rawAirport = isPredepLike ? flight.dep    : flight.arr
   params.set(ENTRY.arrivalFlightNumber, extractFlightNumber(rawFlight))
   params.set(ENTRY.arrivalAirport,      extractAirportCode(rawAirport))
   params.set(ENTRY.fleet, OPTIONS.fleet)

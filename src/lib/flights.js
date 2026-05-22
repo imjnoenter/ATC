@@ -1,7 +1,12 @@
 const LT_PATTERN = /\b(LT|LTS|L\/T)\b/i
+const NS_PATTERN = /\b(N\/S|NS)\b/i
 
 function hasLtFlag(values) {
   return values.some(v => LT_PATTERN.test(v))
+}
+
+function hasNsFlag(values) {
+  return values.some(v => NS_PATTERN.test(v))
 }
 
 export function normalizeRows(flights) {
@@ -11,6 +16,10 @@ export function normalizeRows(flights) {
     // LT in DEPARTURE columns (FLT DEP/DEP/STD) → Arrival report
     longTransitPredep:   hasLtFlag([f.flt, f.arr, f.sta]),
     longTransitArrival:  hasLtFlag([f.fltDep, f.dep, f.std]),
+    // N/S in ARRIVAL columns → First Flight (same form as Pre-Dep)
+    // N/S in DEPARTURE columns → Nightstop (same form as Arrival)
+    nightstopPredep:     hasNsFlag([f.flt, f.arr, f.sta]),
+    nightstopArrival:    hasNsFlag([f.fltDep, f.dep, f.std]),
   }))
 }
 
@@ -48,9 +57,11 @@ export function filterByNickname(flights, nickname) {
   return flights.filter(f => f.mechTech.toLowerCase().includes(q))
 }
 
-// PREDEP takes precedence if both flags are true
+// LT flags take precedence over N/S flags when both are present
 export function computeReportType(flight) {
-  if (flight.longTransitPredep) return 'PREDEP'
+  if (flight.longTransitPredep)  return 'PREDEP'
+  if (flight.nightstopPredep)    return 'FIRST_FLIGHT'
   if (flight.longTransitArrival) return 'ARRIVAL'
+  if (flight.nightstopArrival)   return 'NIGHTSTOP'
   return 'TRANSIT'
 }
