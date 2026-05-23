@@ -9,16 +9,6 @@ const TYPE_LABEL = {
   ARRIVAL: 'Long Transit — Arrival',
 }
 
-function InfoRow({ label, value }) {
-  return (
-    <div className="flex items-center justify-between py-1.5 border-b border-beige dark:border-stone-600 last:border-0">
-      <span className="text-xs text-warm-gray dark:text-stone-400">{label}</span>
-      <span className="text-sm font-semibold text-warm-gray-dark dark:text-stone-100">
-        {value || '—'}
-      </span>
-    </div>
-  )
-}
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false)
@@ -73,10 +63,6 @@ export default function FormGuideScreen({ flight, onComplete, onBack, themeProps
           </p>
         </div>
 
-        <div className="bg-beige/60 dark:bg-stone-700/60 rounded-xl p-3">
-          <p className="text-xs font-semibold text-warm-gray dark:text-stone-400 mb-2">Auto-filled values</p>
-          <InfoRow label="Email" value="saranyuparneja@airasia.com" />
-        </div>
       </div>
 
       <div className="card p-3 mb-4 flex items-center gap-2">
