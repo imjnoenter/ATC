@@ -25,9 +25,24 @@ Pure client-side React 18 + Vite + Tailwind CSS app. No backend. Two external da
 Home → FormGuide → Done
 ```
 
-Managed by a single `useReducer` in `src/hooks/useAppReducer.js`. The reducer holds `screen`, `nickname`, `selectedFlight`, and `progress` (per-flight status map). Tapping a card sets `screen: 'formGuide'` directly — there is no checklist step.
+Managed by a single `useReducer` in `src/hooks/useAppReducer.js`. Reducer state: `screen`, `nickname`, `selectedName`, `selectedFlight`, `progress` (per-flight status map). `nickname`, `selectedName`, and `progress` are persisted to `localStorage` under the key `atc-app-state` and restored on load.
+
+**Reducer actions:**
+- `SET_NICKNAME` — updates raw input, clears `selectedName`
+- `SET_SELECTED_NAME` — sets both `selectedName` and `nickname` to the chosen name
+- `CLEAR_NAME` — resets both to empty/null
+- `SELECT_FLIGHT` — navigates to `formGuide`, marks flight `inProgress`
+- `TOGGLE_DONE` — toggles a flight's progress between `done` and unset
+- `COMPLETE` — navigates to `done`, marks flight `done`
+- `BACK_HOME` — returns to `home`
 
 `useFlights` (`src/hooks/useFlights.js`) fetches and caches flight data in `sessionStorage` (5-min TTL). It is independent of the reducer.
+
+### Name search
+
+Typing into the nickname input shows suggestion chips (substring match via `getSuggestedNames`). Selecting a chip sets `selectedName` and switches to **exact-match** filtering via `filterByExactName` — the `mechTech` field is split on `+` and each part is compared literally. Flights only display after a name chip is selected, not during freeform typing.
+
+The `mechTech` field can contain a single person (`A`, `Joe C`, `Xxx(T)`) or multiple people joined by ` + ` (`Name1 + Name2`). All name utilities in `src/lib/flights.js` split on `+` before comparing.
 
 ### Data pipeline
 
@@ -35,15 +50,25 @@ Managed by a single `useReducer` in `src/hooks/useAppReducer.js`. The reducer ho
 Google Sheet CSV
   → csv.js (RFC 4180 parser)
   → sheet.js (header detection + column mapping)
-  → flights.js (long-transit flag detection, nickname filter, report type)
+  → flights.js (flag detection, name utilities, report type)
   → TransitCard / FormGuideScreen
 ```
 
-**Critical: the sheet header row only explicitly labels `REG`, `ARR`, `DEP`, `MECH / TECH`.** The columns `FLT`, `STA`, `FLT DEP`, `STD`, `BAY` are unlabeled and derived by fixed offsets from the labeled anchors (see comments in `src/lib/sheet.js`). Do not assume column positions — always derive from anchor columns.
+**Critical: the sheet header row only explicitly labels `REG`, `ARR`, `DEP`, `MECH / TECH`.** The columns `FLT`, `FLT DEP`, `STD`, `BAY` are unlabeled and derived by fixed offsets from the labeled anchors (see comments in `src/lib/sheet.js`). Do not assume column positions — always derive from anchor columns. **`STA` is resolved by header name first** (the labeled column `STA` will be used directly if present); the offset fallback (`ARR_col + 2`) only applies when the column is unlabeled.
 
-**Long-transit flag logic (counterintuitive):**
-- LT/LTS/L/T in **ARRIVAL** columns (FLT, ARR, STA) → `longTransitPredep = true` → report type `PREDEP`
-- LT/LTS/L/T in **DEPARTURE** columns (FLT DEP, DEP, STD) → `longTransitArrival = true` → report type `ARRIVAL`
+### Report type flag logic
+
+Four boolean flags are added to each flight row by `normalizeRows` in `flights.js`. LT flags take precedence over N/S flags when both appear in the same row.
+
+| Flag | Pattern | Columns checked | → Report type |
+|------|---------|-----------------|---------------|
+| `longTransitPredep` | `LT`, `LTS`, `L/T` | FLT, ARR, STA (arrival) | `PREDEP` |
+| `nightstopPredep` | `N/S`, `NS` | FLT, ARR, STA (arrival) | `FIRST_FLIGHT` |
+| `longTransitArrival` | `LT`, `LTS`, `L/T` | FLT DEP, DEP, STD (departure) | `ARRIVAL` |
+| `nightstopArrival` | `N/S`, `NS` | FLT DEP, DEP, STD (departure) | `NIGHTSTOP` |
+| *(none)* | | | `TRANSIT` |
+
+**Form pre-fill grouping:** `FIRST_FLIGHT` uses identical form fields as `PREDEP` (departure flight/airport, predep option string). `NIGHTSTOP` uses identical form fields as `ARRIVAL` (arrival flight/airport, arrival option string). This is reflected in `formUrl.js` via the `isPredepLike` / `isArrivalLike` booleans.
 
 ### Google Form pre-fill
 
@@ -52,6 +77,8 @@ Google Sheet CSV
 **Critical gotcha:** `URLSearchParams` encodes `/` as `%2F`, which breaks Google Forms dropdown/radio matching. The URL builder always applies `.replace(/%2F/gi, '/')` at the end.
 
 **Entry ID discovery:** Google Forms embeds field data in hidden sentinel inputs (`name="entry.XXXXXXXXXX_sentinel"`). The DOM order of sentinels does **not** match visual field order on the page. Entry IDs were confirmed by having a user manually fill all fields and reading `el.value` from each `input[name*="entry."]:not([name*="_sentinel"])`. Do not remap entry IDs based on DOM order alone.
+
+**Page 1 email field:** has no entry ID — Google collects it automatically from the signed-in Google account. It cannot be pre-filled via URL parameters.
 
 **Page 5 field mapping:** checkbox grid rows (Door Scratch, Cargo Scratch, Left/Right Side) are pre-filled in the form's internal state via URL params but do **not** show visual checkmarks — this is a Google Forms limitation. The values are submitted correctly when the form is submitted.
 

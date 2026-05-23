@@ -3,12 +3,12 @@ import { buildCsvUrl, SHEET_ID, TAB_NAME } from '../config/sheet.js'
 import { normalizeRows } from './flights.js'
 
 // The actual sheet header row only labels: REG, ARR, DEP, MECH / TECH
-// FLT, STA, FLT DEP, STD, BAY are unlabeled columns at fixed offsets:
+// FLT, FLT DEP, STD, BAY are unlabeled columns at fixed offsets:
 //   FLT     = REG_col + 1          (arrival flight — empty for N/S rows)
-//   STA     = ARR_col + 2          (scheduled arrival time)
 //   FLT DEP = ARR_col + 3 = DEP-1  (departure flight number)
 //   STD     = DEP_col + 1          (scheduled departure time)
 //   BAY     = DEP_col + 3          (parking bay)
+// STA uses the labeled "STA" header when present; falls back to ARR_col + 2 if unlabeled.
 
 const REQUIRED_HEADERS = ['REG', 'ARR', 'DEP']
 
@@ -49,7 +49,7 @@ function detectHeaderBlocks(rows) {
       colMap['FLT'] = regCol + 1       // arrival flight number
     }
     if (arrCol !== undefined) {
-      colMap['STA'] = arrCol + 2       // scheduled time of arrival
+      if (colMap['STA'] === undefined) colMap['STA'] = arrCol + 2  // fallback: offset if unlabeled
       colMap['FLT DEP'] = arrCol + 3   // departure flight number
     }
     if (depCol !== undefined) {
