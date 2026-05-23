@@ -1,7 +1,9 @@
 import Layout from '../components/Layout.jsx'
 import TransitCard from '../components/TransitCard.jsx'
 import Spinner from '../components/Spinner.jsx'
+import InstallBanner from '../components/InstallBanner.jsx'
 import { filterByExactName, getSuggestedNames } from '../lib/flights.js'
+import { useInstallPrompt } from '../hooks/useInstallPrompt.js'
 
 export default function HomeScreen({
   flights, loading, error, reload, progress,
@@ -12,9 +14,11 @@ export default function HomeScreen({
 }) {
   const suggestions = selectedName ? [] : getSuggestedNames(flights, nickname)
   const filtered = selectedName ? filterByExactName(flights, selectedName) : []
+  const { canInstall, install, dismiss } = useInstallPrompt()
 
   return (
     <Layout {...themeProps}>
+      {canInstall && <InstallBanner onInstall={install} onDismiss={dismiss} />}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-1">
           <h1 className="text-2xl font-bold text-warm-gray-dark dark:text-stone-100 tracking-tight">ATC</h1>
