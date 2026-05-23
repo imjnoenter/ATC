@@ -3,12 +3,13 @@ import { buildCsvUrl, SHEET_ID, TAB_NAME } from '../config/sheet.js'
 import { normalizeRows } from './flights.js'
 
 // The actual sheet header row only labels: REG, ARR, DEP, MECH / TECH
-// FLT, FLT DEP, STD, BAY are unlabeled columns at fixed offsets:
+// All other used columns are unlabeled and derived by fixed offsets:
 //   FLT     = REG_col + 1          (arrival flight — empty for N/S rows)
-//   FLT DEP = ARR_col + 3 = DEP-1  (departure flight number)
-//   STD     = DEP_col + 1          (scheduled departure time)
-//   BAY     = DEP_col + 3          (parking bay)
-// STA uses the labeled "STA" header when present; falls back to ARR_col + 2 if unlabeled.
+//   STA     = ARR_col + 1          (scheduled time of arrival)
+//   FLT DEP = ARR_col + 3          (departure flight number)
+//   STD     = DEP_col + 1          (scheduled time of departure)
+//   BAY     = DEP_col + 4          (parking bay)
+// STA uses the labeled "STA" header when present; falls back to ARR_col + 1 if unlabeled.
 
 const REQUIRED_HEADERS = ['REG', 'ARR', 'DEP']
 
@@ -49,12 +50,12 @@ function detectHeaderBlocks(rows) {
       colMap['FLT'] = regCol + 1       // arrival flight number
     }
     if (arrCol !== undefined) {
-      if (colMap['STA'] === undefined) colMap['STA'] = arrCol + 2  // fallback: offset if unlabeled
+      if (colMap['STA'] === undefined) colMap['STA'] = arrCol + 1  // fallback: offset if unlabeled
       colMap['FLT DEP'] = arrCol + 3   // departure flight number
     }
     if (depCol !== undefined) {
       colMap['STD'] = depCol + 1       // scheduled time of departure
-      colMap['BAY'] = depCol + 3       // parking bay
+      colMap['BAY'] = depCol + 4       // parking bay
     }
 
     blocks.push({ rowIdx, colMap })

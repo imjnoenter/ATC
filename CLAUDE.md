@@ -54,7 +54,7 @@ Google Sheet CSV
   → TransitCard / FormGuideScreen
 ```
 
-**Critical: the sheet header row only explicitly labels `REG`, `ARR`, `DEP`, `MECH / TECH`.** The columns `FLT`, `FLT DEP`, `STD`, `BAY` are unlabeled and derived by fixed offsets from the labeled anchors (see comments in `src/lib/sheet.js`). Do not assume column positions — always derive from anchor columns. **`STA` is resolved by header name first** (the labeled column `STA` will be used directly if present); the offset fallback (`ARR_col + 2`) only applies when the column is unlabeled.
+**Critical: the sheet header row only explicitly labels `REG`, `ARR`, `DEP`, `MECH / TECH`.** All other used columns are unlabeled and derived by fixed offsets (verified against live sheet): `FLT = REG+1`, `STA = ARR+1`, `FLT DEP = ARR+3`, `STD = DEP+1`, `BAY = DEP+4`. See comments in `src/lib/sheet.js`. `STA` uses the labeled header when present; falls back to `ARR+1` if unlabeled.
 
 ### Report type flag logic
 
