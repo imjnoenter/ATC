@@ -20,6 +20,8 @@ export function normalizeRows(flights) {
     // N/S in DEPARTURE columns → Nightstop (same form as Arrival)
     nightstopPredep:     hasNsFlag([f.flt, f.arr, f.sta]),
     nightstopArrival:    hasNsFlag([f.fltDep, f.dep, f.std]),
+    // Blank FLT and ARR in arrival section → First Flight
+    blankArrival:        !f.flt?.trim() && !f.arr?.trim(),
   }))
 }
 
@@ -59,9 +61,9 @@ export function filterByNickname(flights, nickname) {
 
 // LT flags take precedence over N/S flags when both are present
 export function computeReportType(flight) {
-  if (flight.longTransitPredep)  return 'PREDEP'
-  if (flight.nightstopPredep)    return 'FIRST_FLIGHT'
-  if (flight.longTransitArrival) return 'ARRIVAL'
-  if (flight.nightstopArrival)   return 'NIGHTSTOP'
+  if (flight.longTransitPredep)                        return 'PREDEP'
+  if (flight.nightstopPredep || flight.blankArrival)   return 'FIRST_FLIGHT'
+  if (flight.longTransitArrival)                       return 'ARRIVAL'
+  if (flight.nightstopArrival)                         return 'NIGHTSTOP'
   return 'TRANSIT'
 }
