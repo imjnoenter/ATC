@@ -5,8 +5,13 @@ import InstallBanner from '../components/InstallBanner.jsx'
 import { filterByExactName, getSuggestedNames } from '../lib/flights.js'
 import { useInstallPrompt } from '../hooks/useInstallPrompt.js'
 
+// A normal day is 150+ flights. Well below that usually means the sheet layout
+// changed and rows are being dropped, but it can also just be a light schedule —
+// so this only dims the count, it does not raise an alert.
+const LOW_FLIGHT_COUNT = 50
+
 export default function HomeScreen({
-  flights, loading, error, reload, progress,
+  flights, warnings, loading, error, reload, progress,
   nickname, selectedName,
   onNicknameChange, onSelectName, onClearName,
   onSelectFlight, onToggleDone,
@@ -15,6 +20,7 @@ export default function HomeScreen({
   const suggestions = selectedName ? [] : getSuggestedNames(flights, nickname)
   const filtered = selectedName ? filterByExactName(flights, selectedName) : []
   const { canInstall, install, dismiss } = useInstallPrompt()
+  const dataHealthy = flights.length >= LOW_FLIGHT_COUNT && warnings.length === 0
 
   return (
     <Layout {...themeProps}>
@@ -32,6 +38,12 @@ export default function HomeScreen({
           </button>
         </div>
         <p className="text-warm-gray dark:text-stone-400 text-sm">Aircraft Transit Checker</p>
+        {!loading && !error && (
+          <p className={`text-xs mt-1 ${dataHealthy ? 'text-warm-gray-light dark:text-stone-500' : 'text-danger'}`}>
+            {flights.length} flight{flights.length !== 1 ? 's' : ''} loaded
+            {!dataHealthy && ' · schedule may be incomplete'}
+          </p>
+        )}
       </div>
 
       <div className="mb-6">
@@ -99,6 +111,18 @@ export default function HomeScreen({
           <button type="button" onClick={reload} className="btn-primary mt-2 text-sm py-2">
             Try Again
           </button>
+        </div>
+      )}
+
+      {!loading && !error && warnings.length > 0 && (
+        <div className="card p-4 mb-6 border-danger/30 bg-danger-light/20 dark:bg-red-900/20 dark:border-red-700/30 space-y-1">
+          <p className="text-sm font-semibold text-danger">Sheet layout looks different</p>
+          {warnings.map(w => (
+            <p key={w} className="text-xs text-warm-gray dark:text-stone-400">{w}</p>
+          ))}
+          <p className="text-xs text-warm-gray-light dark:text-stone-500 pt-1">
+            Some details may be blank or wrong — double-check against the sheet.
+          </p>
         </div>
       )}
 
