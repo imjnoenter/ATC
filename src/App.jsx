@@ -7,7 +7,7 @@ import DoneScreen from './screens/DoneScreen.jsx'
 
 export default function App() {
   const { state, dispatch } = useAppReducer()
-  const { flights, loading, error, reload } = useFlights()
+  const { flights, warnings, loading, error, reload } = useFlights()
   const { dark, toggle } = useTheme()
   const { screen, nickname, selectedName, selectedFlight, progress } = state
 
@@ -17,6 +17,7 @@ export default function App() {
     return (
       <HomeScreen
         flights={flights}
+        warnings={warnings}
         loading={loading}
         error={error}
         reload={reload}

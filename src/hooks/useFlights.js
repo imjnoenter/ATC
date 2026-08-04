@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { fetchFlights } from '../lib/sheet.js'
 
-const CACHE_KEY = 'atc_flights_cache'
+// v2: cached payload changed from a flights array to { flights, warnings }
+const CACHE_KEY = 'atc_flights_cache_v2'
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 
 function loadCache() {
@@ -24,6 +25,7 @@ function saveCache(data) {
 
 export function useFlights() {
   const [flights, setFlights] = useState([])
+  const [warnings, setWarnings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -32,14 +34,16 @@ export function useFlights() {
     setError(null)
     const cached = loadCache()
     if (cached) {
-      setFlights(cached)
+      setFlights(cached.flights)
+      setWarnings(cached.warnings)
       setLoading(false)
       return
     }
     try {
       const data = await fetchFlights()
       saveCache(data)
-      setFlights(data)
+      setFlights(data.flights)
+      setWarnings(data.warnings)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -49,5 +53,5 @@ export function useFlights() {
 
   useEffect(() => { load() }, [])
 
-  return { flights, loading, error, reload: load }
+  return { flights, warnings, loading, error, reload: load }
 }

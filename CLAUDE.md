@@ -54,7 +54,11 @@ Google Sheet CSV
   → TransitCard / FormGuideScreen
 ```
 
-**Critical: the sheet header row only explicitly labels `REG`, `ARR`, `DEP`, `MECH / TECH`.** All other used columns are unlabeled and derived by fixed offsets (verified against live sheet): `FLT = REG+1`, `STA = ARR+1`, `FLT DEP = ARR+3`, `STD = DEP+1`, `BAY = DEP+4`. See comments in `src/lib/sheet.js`. `STA` uses the labeled header when present; falls back to `ARR+1` if unlabeled.
+**Critical: the sheet header row only explicitly labels `REG`, `ARR`, `DEP`, `MECH / TECH`.** All other used columns are unlabeled and derived by fixed offsets from the `ARR` / `DEP` anchors (verified against live sheet): `FLT = ARR-1`, `STA = ARR+1`, `FLT DEP = DEP-1`, `STD = DEP+1`, `BAY = DEP+4`. Both flight-number columns sit immediately left of their airport column. `ARR+2` is `ETA` and `ARR+3` is a blank spacer — do not read those. See comments in `src/lib/sheet.js`. `STA` uses the labeled header when present; falls back to `ARR+1` if unlabeled.
+
+**Header cells are not clean labels.** Merged/watermark text from neighbouring titles bleeds into them on the live sheet — the `REG` cell reads `ab STORE REG` and `MECH / TECH` reads `CEO <= 16\nNEO <= 15 MECH / TECH`. `findCol` in `sheet.js` therefore matches those two labels by exact hit *then* substring. `ARR` and `DEP` stay **exact-match only**: they are the guard that stops a data row from being mistaken for a header row. Do not loosen them.
+
+The sheet contains several header blocks (one main schedule plus smaller trailing blocks for parked aircraft). All are parsed; each block's columns are resolved independently.
 
 ### Report type flag logic
 
